@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="AW139 Lead">
+<title>AW139 Lead Engineer</title>
+<style>
+:root{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",Arial,sans-serif;background:#f5f5f7;color:#111}
+body{margin:0;background:#f5f5f7}.app{max-width:700px;margin:auto;padding:18px 14px 40px}
+h1{font-size:26px;margin:0}.sub{color:#666;margin:3px 0 16px}
+.days{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+button{font:inherit}.day{border:0;border-radius:12px;padding:12px 6px;background:white;box-shadow:0 1px 3px #0001}.day.active{background:#111;color:white}
+.card{background:white;border-radius:16px;padding:14px;box-shadow:0 1px 4px #0001;margin-bottom:12px}
+.head{display:flex;justify-content:space-between;align-items:center;gap:8px}.head h2{font-size:20px;margin:0}
+.add{border:0;border-radius:10px;padding:9px 12px;background:#111;color:#fff}
+.task{display:flex;align-items:center;gap:11px;padding:12px 4px;border-top:1px solid #eee}
+.task:first-child{border-top:0}.task input{width:22px;height:22px}.task.done span{text-decoration:line-through;color:#888}
+.badge{font-size:12px;color:#666;margin-left:auto}.stats{display:flex;gap:8px;flex-wrap:wrap}.pill{background:#f0f0f2;padding:8px 10px;border-radius:10px;font-size:13px}
+textarea{width:100%;box-sizing:border-box;border:1px solid #ddd;border-radius:10px;padding:10px;font:inherit;min-height:80px}
+@media(min-width:600px){.days{grid-template-columns:repeat(6,1fr)}}
+</style>
+</head>
+<body>
+<main class="app" id="app">
+<h1>🚁 AW139 Lead Engineer</h1>
+<div class="sub">Weekly To-Do · Lundi → Samedi</div>
+<div class="days" id="days"></div>
+<section class="card">
+<div class="head"><h2 id="title"></h2><button class="add" id="add">＋ Tâche</button></div>
+<div id="tasks"></div>
+</section>
+<section class="card">
+<div class="stats"><div class="pill" id="count">0 tâches terminées</div><div class="pill">🔴 Urgent</div><div class="pill">🟠 Important</div><div class="pill">🟢 À planifier</div></div>
+</section>
+<section class="card">
+<strong>📝 Notes du jour</strong>
+<textarea id="notes" placeholder="Ajouter une note, un défaut, un point de handover..."></textarea>
+</section>
+</main>
+<script>
+const initial={
+"Lundi":["Toolbox Meeting","GSE List","Revue des défauts / problèmes en cours","Priorisation des travaux","Vérification des tâches critiques","Suivi pièces / commandes"],
+"Mardi":["Suivi des travaux lancés lundi","Troubleshooting / investigations","Contrôle de l’avancement maintenance","Documentation technique"],
+"Mercredi":["Revue mi-semaine","Contrôle des travaux en retard","Suivi des défauts récurrents","Coordination maintenance / opérations"],
+"Jeudi":["Weekly Roster","Suivi des actions correctives","Contrôle pièces et outillage","Vérification documentation / conformité","Préparation des travaux à venir"],
+"Vendredi":["Revue générale de la flotte","Clôture des actions terminées","Vérification des tâches restant ouvertes","Préparation de la semaine suivante","Points à transmettre"],
+"Samedi":["Workload – Weekly Roster","Contrôle des travaux du week-end","Suivi des anomalies restantes","Vérification de la disponibilité des aéronefs","Transmission / Handover","Priorités pour lundi"]
+};
+let data=JSON.parse(localStorage.getItem("aw139_data")||"null")||initial;
+let state=JSON.parse(localStorage.getItem("aw139_state")||"{}");
+let notes=JSON.parse(localStorage.getItem("aw139_notes")||"{}");
+let current=localStorage.getItem("aw139_day")||"Lundi";
+const $=id=>document.getElementById(id);
+function save(){localStorage.setItem("aw139_data",JSON.stringify(data));localStorage.setItem("aw139_state",JSON.stringify(state));localStorage.setItem("aw139_notes",JSON.stringify(notes));localStorage.setItem("aw139_day",current)}
+function render(){
+$("days").innerHTML="";
+Object.keys(data).forEach(day=>{let b=document.createElement("button");b.className="day"+(day===current?" active":"");b.textContent=day;b.onclick=()=>{current=day;save();render()};$("days").appendChild(b)});
+$("title").textContent=current;
+$("tasks").innerHTML="";
+data[current].forEach((t,i)=>{let row=document.createElement("label");row.className="task"+(state[current+"-"+i]?" done":"");let cb=document.createElement("input");cb.type="checkbox";cb.checked=!!state[current+"-"+i];cb.onchange=()=>{state[current+"-"+i]=cb.checked;save();render()};let s=document.createElement("span");s.textContent=t;row.append(cb,s);$("tasks").appendChild(row)});
+let total=Object.values(state).filter(Boolean).length;$("count").textContent=total+" tâche"+(total>1?"s":"")+" terminée"+(total>1?"s":"");
+$("notes").value=notes[current]||"";
+}
+$("add").onclick=()=>{let t=prompt("Nouvelle tâche pour "+current);if(t&&t.trim()){data[current].push(t.trim());save();render()}};
+$("notes").oninput=()=>{notes[current]=$("notes").value;save()};
+render();
+</script>
+</body>
+</html>
